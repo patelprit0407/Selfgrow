@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SelfGrow — Personal Growth Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg2: #111118;
+  --bg3: #1a1a24;
+  --card: #14141e;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #f0f0f8;
+  --muted: #8888a0;
+  --hint: #44445a;
+  --green: #2de8a0;
+  --green-dim: rgba(45,232,160,0.12);
+  --green-mid: rgba(45,232,160,0.25);
+  --purple: #9d7cff;
+  --purple-dim: rgba(157,124,255,0.12);
+  --coral: #ff7c5c;
+  --coral-dim: rgba(255,124,92,0.12);
+  --amber: #ffbe3c;
+  --amber-dim: rgba(255,190,60,0.1);
+  --blue: #5ca8ff;
+  --blue-dim: rgba(92,168,255,0.12);
+  --r: 12px;
+  --r-sm: 8px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* bg grid */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(157,124,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(157,124,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glow {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+.glow-1 { width: 400px; height: 400px; background: rgba(157,124,255,0.08); top: -100px; right: -100px; }
+.glow-2 { width: 300px; height: 300px; background: rgba(45,232,160,0.06); bottom: 200px; left: -80px; }
+
+/* NAV */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 24px;
+  background: rgba(10,10,15,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 0.5px solid var(--border);
+}
+.nav-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: -0.5px; }
+.nav-logo span { color: var(--green); }
+.nav-tabs { display: flex; gap: 4px; }
+.nav-tab {
+  padding: 7px 14px; border-radius: var(--r-sm);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  border: none; background: transparent; color: var(--muted);
+  transition: all 0.2s;
+}
+.nav-tab:hover { color: var(--text); background: var(--bg3); }
+.nav-tab.active { background: var(--bg3); color: var(--text); border: 0.5px solid var(--border2); }
+
+/* MAIN */
+main { position: relative; z-index: 1; max-width: 780px; margin: 0 auto; padding: 0 20px 80px; }
+
+/* PAGES */
+.page { display: none; animation: fadeUp 0.3s ease; }
+.page.active { display: block; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+/* HERO */
+.hero { padding: 48px 0 32px; }
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--green); background: var(--green-dim);
+  border: 0.5px solid rgba(45,232,160,0.2);
+  padding: 5px 12px; border-radius: 20px; margin-bottom: 20px;
+}
+.hero-tag::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--green); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.hero h1 { font-family:'Syne',sans-serif; font-weight:800; font-size:38px; line-height:1.1; letter-spacing:-1px; margin-bottom:14px; }
+.hero h1 em { font-style:normal; color:var(--purple); }
+.hero p { font-size:15px; color:var(--muted); line-height:1.7; max-width:480px; }
+
+/* STAT CARDS */
+.stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin:28px 0; }
+.stat-card {
+  background:var(--card); border:0.5px solid var(--border);
+  border-radius:var(--r); padding:16px;
+  transition: border-color 0.2s;
+}
+.stat-card:hover { border-color: var(--border2); }
+.stat-card .sc-label { font-size:11px; color:var(--muted); margin-bottom:6px; }
+.stat-card .sc-val { font-family:'Syne',sans-serif; font-weight:700; font-size:28px; line-height:1; }
+.stat-card .sc-sub { font-size:11px; color:var(--hint); margin-top:4px; }
+.sc-green .sc-val { color:var(--green); }
+.sc-purple .sc-val { color:var(--purple); }
+.sc-amber .sc-val { color:var(--amber); }
+.sc-coral .sc-val { color:var(--coral); }
+
+/* SECTION HEADER */
+.sec-head { display:flex; align-items:center; justify-content:space-between; margin:32px 0 16px; }
+.sec-title { font-family:'Syne',sans-serif; font-weight:700; font-size:16px; letter-spacing:-0.3px; }
+.sec-badge {
+  font-size:11px; padding:4px 10px; border-radius:20px;
+  background:var(--bg3); color:var(--muted); border:0.5px solid var(--border);
+}
+
+/* HABIT CARD */
+.habit-card {
+  background:var(--card); border:0.5px solid var(--border);
+  border-radius:var(--r); padding:14px 16px; margin-bottom:8px;
+  transition: border-color 0.2s, background 0.2s;
+}
+.habit-card:hover { border-color:var(--border2); }
+.habit-top { display:flex; align-items:center; gap:12px; }
+.habit-icon-wrap {
+  width:36px; height:36px; border-radius:var(--r-sm);
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; flex-shrink:0;
+}
+.habit-text { flex:1; min-width:0; }
+.habit-name { font-size:13px; font-weight:500; color:var(--text); }
+.habit-note { font-size:11px; color:var(--muted); margin-top:2px; }
+.day-dots { display:flex; gap:4px; flex-shrink:0; }
+.dot {
+  width:28px; height:28px; border-radius:50%;
+  border:0.5px solid var(--border2);
+  background:transparent; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:500; color:var(--hint);
+  transition:all 0.15s; flex-shrink:0;
+}
+.dot:hover { border-color:var(--green); color:var(--green); }
+.dot.done { background:var(--green-dim); border-color:var(--green); color:var(--green); }
+.dot.missed { background:var(--coral-dim); border-color:var(--coral); color:var(--coral); }
+.dot-label { font-size:9px; color:var(--hint); text-align:center; }
+.dot.today { box-shadow: 0 0 0 2px var(--purple); border-color: var(--purple); color: var(--purple); }
+.dot.today.done { box-shadow: 0 0 0 2px var(--green); }
+.dot.today.missed { box-shadow: 0 0 0 2px var(--coral); }
+.day-lbl.today { color: var(--purple); font-weight: 700; }
+.day-labels { display:flex; gap:4px; margin-left:auto; flex-shrink:0; }
+.day-lbl { width:28px; text-align:center; font-size:9px; color:var(--hint); margin-bottom:4px; }
+
+/* WEEK PROGRESS BAR */
+.week-bar-wrap { background:var(--bg3); border-radius:4px; height:5px; margin:20px 0 6px; overflow:hidden; }
+.week-bar-fill { height:100%; background:var(--green); border-radius:4px; transition:width 0.4s ease; }
+.week-bar-label { font-size:11px; color:var(--muted); }
+
+/* REVIEW PAGE */
+.review-card {
+  background:var(--card); border:0.5px solid var(--border);
+  border-radius:var(--r); padding:18px; margin-bottom:12px;
+  transition:border-color 0.2s;
+}
+.review-card:hover { border-color:var(--border2); }
+.review-q { font-size:13px; font-weight:500; color:var(--text); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+.review-q .rq-icon { font-size:14px; }
+textarea.rv {
+  width:100%; background:var(--bg3); border:0.5px solid var(--border);
+  border-radius:var(--r-sm); padding:10px 12px;
+  font-size:13px; font-family:'DM Sans',sans-serif; color:var(--text);
+  resize:none; min-height:70px; line-height:1.6; outline:none;
+  transition:border-color 0.2s;
+}
+textarea.rv:focus { border-color:var(--purple); }
+textarea.rv::placeholder { color:var(--hint); }
+
+.mood-row { display:flex; gap:6px; flex-wrap:wrap; }
+.mood-btn {
+  padding:6px 14px; border-radius:20px;
+  border:0.5px solid var(--border2); background:transparent;
+  font-size:12px; cursor:pointer; color:var(--muted);
+  font-family:'DM Sans',sans-serif;
+  transition:all 0.15s;
+}
+.mood-btn:hover { border-color:var(--green); color:var(--green); }
+.mood-btn.sel { background:var(--green-dim); border-color:var(--green); color:var(--green); }
+
+.rating-row { display:flex; gap:6px; flex-wrap:wrap; }
+.rat-btn {
+  width:36px; height:36px; border-radius:var(--r-sm);
+  border:0.5px solid var(--border2); background:transparent;
+  font-size:13px; cursor:pointer; color:var(--muted);
+  font-family:'Syne',sans-serif; font-weight:700;
+  transition:all 0.15s;
+}
+.rat-btn:hover { border-color:var(--purple); color:var(--purple); }
+.rat-btn.sel { background:var(--purple-dim); border-color:var(--purple); color:var(--purple); }
+
+/* ANALYZE PAGE */
+.analyze-hero { padding:40px 0 24px; }
+.analyze-hero h2 { font-family:'Syne',sans-serif; font-weight:800; font-size:28px; letter-spacing:-0.5px; margin-bottom:8px; }
+.analyze-hero p { font-size:14px; color:var(--muted); line-height:1.6; }
+
+.trait-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:24px; }
+.trait-card {
+  background:var(--card); border:0.5px solid var(--border);
+  border-radius:var(--r); padding:14px 16px;
+}
+.trait-label { font-size:11px; color:var(--muted); margin-bottom:6px; }
+.trait-val { font-family:'Syne',sans-serif; font-weight:700; font-size:15px; margin-bottom:8px; }
+.trait-bar-bg { height:4px; background:var(--bg3); border-radius:2px; overflow:hidden; }
+.trait-bar-fill { height:100%; border-radius:2px; transition:width 0.8s ease; }
+
+.insight-box {
+  border-left:3px solid var(--purple); border-radius:0;
+  background:var(--purple-dim); padding:16px 18px;
+  margin-bottom:20px;
+}
+.insight-box p { font-size:13px; color:var(--text); line-height:1.7; }
+
+.phase-card {
+  background:var(--card); border:0.5px solid var(--border);
+  border-radius:var(--r); padding:16px 18px; margin-bottom:10px;
+}
+.phase-badge {
+  display:inline-block; font-size:10px; font-weight:500;
+  padding:3px 10px; border-radius:20px; margin-bottom:10px;
+  letter-spacing:0.05em; text-transform:uppercase;
+}
+.pb-green { background:var(--green-dim); color:var(--green); border:0.5px solid rgba(45,232,160,0.3); }
+.pb-purple { background:var(--purple-dim); color:var(--purple); border:0.5px solid rgba(157,124,255,0.3); }
+.pb-amber { background:var(--amber-dim); color:var(--amber); border:0.5px solid rgba(255,190,60,0.2); }
+.phase-title { font-family:'Syne',sans-serif; font-weight:700; font-size:14px; margin-bottom:4px; }
+.phase-sub { font-size:12px; color:var(--muted); margin-bottom:12px; }
+.phase-item { display:flex; gap:10px; padding:7px 0; border-bottom:0.5px solid var(--border); font-size:12px; color:var(--muted); line-height:1.5; }
+.phase-item:last-child { border-bottom:none; }
+.phase-item::before { content:'→'; color:var(--green); flex-shrink:0; font-weight:700; }
+
+/* ONBOARD */
+.onboard { padding:40px 0; }
+.onboard-card {
+  background:var(--card); border:0.5px solid var(--border);
+  border-radius:var(--r); padding:28px 24px; margin-bottom:16px;
+}
+.onboard-step { font-size:11px; color:var(--purple); font-weight:500; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:8px; }
+.onboard-q { font-family:'Syne',sans-serif; font-weight:700; font-size:17px; margin-bottom:16px; line-height:1.3; }
+.opt-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.opt-btn {
+  background:var(--bg3); border:0.5px solid var(--border2);
+  border-radius:var(--r-sm); padding:12px 14px;
+  text-align:left; cursor:pointer; color:var(--muted);
+  font-family:'DM Sans',sans-serif; font-size:13px;
+  transition:all 0.15s;
+}
+.opt-btn:hover { border-color:var(--purple); color:var(--text); }
+.opt-btn.sel { background:var(--purple-dim); border-color:var(--purple); color:var(--text); }
+.opt-btn .ob-title { font-weight:500; color:var(--text); font-size:13px; }
+.opt-btn .ob-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+.ob-nav { display:flex; gap:10px; align-items:center; margin-top:20px; }
+.btn-primary {
+  background:var(--green); color:#0a0a0f;
+  border:none; border-radius:var(--r-sm);
+  padding:10px 22px; font-size:13px; font-weight:500;
+  font-family:'DM Sans',sans-serif; cursor:pointer;
+  transition:all 0.15s;
+}
+.btn-primary:hover { opacity:0.85; }
+.btn-sec {
+  background:transparent; color:var(--muted);
+  border:0.5px solid var(--border2); border-radius:var(--r-sm);
+  padding:10px 18px; font-size:13px; font-weight:500;
+  font-family:'DM Sans',sans-serif; cursor:pointer;
+  transition:all 0.15s;
+}
+.btn-sec:hover { color:var(--text); border-color:var(--border2); }
+.step-dots { display:flex; gap:5px; }
+.step-dot { width:6px; height:6px; border-radius:50%; background:var(--border2); transition:all 0.2s; }
+.step-dot.active { background:var(--purple); width:18px; border-radius:3px; }
+
+/* RULES */
+.rules-grid { display:flex; flex-direction:column; gap:8px; margin-bottom:24px; }
+.rule-row {
+  display:flex; gap:12px; align-items:flex-start;
+  background:var(--card); border:0.5px solid var(--border);
+  border-radius:var(--r-sm); padding:12px 14px;
+}
+.rule-num {
+  width:22px; height:22px; border-radius:50%; flex-shrink:0;
+  background:var(--purple-dim); border:0.5px solid var(--purple);
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; color:var(--purple); margin-top:1px;
+}
+.rule-text { font-size:13px; color:var(--muted); line-height:1.5; }
+
+/* STRENGTH GRID */
+.strength-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+.str-card {
+  background:var(--card); border:0.5px solid var(--border);
+  border-radius:var(--r); padding:14px; transition:border-color 0.2s;
+}
+.str-card.positive { border-left:2px solid var(--green); }
+.str-card.negative { border-left:2px solid var(--coral); }
+.str-card:hover { border-color:var(--border2); }
+.str-icon { font-size:18px; margin-bottom:8px; }
+.str-title { font-size:13px; font-weight:500; color:var(--text); margin-bottom:4px; }
+.str-body { font-size:11px; color:var(--muted); line-height:1.5; }
+
+/* TOAST */
+.toast {
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px);
+  background:var(--green); color:#0a0a0f;
+  padding:10px 20px; border-radius:20px;
+  font-size:13px; font-weight:500;
+  transition:transform 0.3s ease; z-index:999;
+  pointer-events:none;
+}
+.toast.show { transform:translateX(-50%) translateY(0); }
+
+/* DIVIDER */
+.divider { height:0.5px; background:var(--border); margin:28px 0; }
+
+/* MINI CHART */
+.mini-chart { display:flex; align-items:flex-end; gap:5px; height:60px; margin-top:10px; }
+.mini-bar { flex:1; border-radius:3px 3px 0 0; min-height:4px; transition:height 0.5s ease; }
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  .hero h1{font-size:28px}
+  .opt-grid,.trait-grid,.strength-grid{grid-template-columns:1fr}
+  .day-dots{gap:3px}
+  .dot{width:24px;height:24px;font-size:10px}
+  nav{padding:12px 16px}
+  main{padding:0 14px 60px}
+}
+</style>
+</head>
+<body>
+
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+
+<nav>
+  <div class="nav-logo">Self<span>Grow</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="goPage('home',this)">Home</button>
+    <button class="nav-tab" onclick="goPage('tracker',this)">Tracker</button>
+    <button class="nav-tab" onclick="goPage('review',this)">Review</button>
+    <button class="nav-tab" onclick="goPage('analyze',this)">Analyze</button>
+  </div>
+</nav>
+
+<main>
+
+<!-- HOME PAGE -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-tag">Your personal growth OS</div>
+    <h1>Build the person<br>you <em>know</em> you can be</h1>
+    <p>Track habits, review your week, and understand your growth patterns — all in one place. No fluff, no guilt. Just clarity.</p>
+  </div>
+
+  <div class="stat-grid" id="home-stats">
+    <div class="stat-card sc-green">
+      <div class="sc-label">Today's habits</div>
+      <div class="sc-val" id="h-today">0/8</div>
+      <div class="sc-sub">completed today</div>
+    </div>
+    <div class="stat-card sc-purple">
+      <div class="sc-label">Week streak</div>
+      <div class="sc-val" id="h-streak">0</div>
+      <div class="sc-sub">days ≥60% habits done</div>
+    </div>
+    <div class="stat-card sc-amber">
+      <div class="sc-label">Week score</div>
+      <div class="sc-val" id="h-score">0%</div>
+      <div class="sc-sub">consistency rate</div>
+    </div>
+    <div class="stat-card sc-coral">
+      <div class="sc-label">Reviews done</div>
+      <div class="sc-val" id="h-reviews">0</div>
+      <div class="sc-sub">weekly reviews</div>
+    </div>
+  </div>
+
+  <div class="sec-head">
+    <div class="sec-title">Weekly progress</div>
+    <div class="sec-badge" id="week-pct-label">0%</div>
+  </div>
+  <div class="mini-chart" id="home-chart"></div>
+  <div class="week-bar-wrap" style="margin-top:16px"><div class="week-bar-fill" id="home-bar" style="width:0%"></div></div>
+  <div class="week-bar-label" id="home-bar-label" style="margin-top:6px">Mark habits in the tracker to see progress</div>
+
+  <div class="divider"></div>
+
+  <div class="sec-head"><div class="sec-title">Your 5 rules</div></div>
+  <div class="rules-grid">
+    <div class="rule-row"><div class="rule-num">1</div><div class="rule-text">No phone until you've done one meaningful thing in the morning — even making your bed.</div></div>
+    <div class="rule-row"><div class="rule-num">2</div><div class="rule-text">When you want to avoid something, do just 5 minutes of it. Momentum usually kicks in.</div></div>
+    <div class="rule-row"><div class="rule-num">3</div><div class="rule-text">Never miss twice. Miss one day — okay. Miss two — a bad habit is forming.</div></div>
+    <div class="rule-row"><div class="rule-num">4</div><div class="rule-text">Anger is information, not an instruction. Pause 10 seconds before reacting.</div></div>
+    <div class="rule-row"><div class="rule-num">5</div><div class="rule-text">Compare yourself only to who you were last month — never to others.</div></div>
+  </div>
+</div>
+
+<!-- TRACKER PAGE -->
+<div class="page" id="page-tracker">
+  <div style="padding:32px 0 20px">
+    <div class="hero-tag">Daily habits</div>
+    <h2 style="font-family:'Syne',sans-serif;font-weight:800;font-size:26px;letter-spacing:-0.5px;margin-bottom:6px">Your habit tracker</h2>
+    <p style="font-size:13px;color:var(--muted)">Click a circle to mark done ✓ — click again for missed ✗ — click again to clear.</p>
+  </div>
+
+  <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat-card sc-green"><div class="sc-label">Today done</div><div class="sc-val" id="t-today">0/8</div></div>
+    <div class="stat-card sc-purple"><div class="sc-label">Best streak</div><div class="sc-val" id="t-streak">0</div></div>
+    <div class="stat-card sc-amber"><div class="sc-label">This week</div><div class="sc-val" id="t-week">0%</div></div>
+  </div>
+
+  <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+    <div class="day-labels" id="day-labels-row">
+      <div class="day-lbl">M</div><div class="day-lbl">T</div><div class="day-lbl">W</div>
+      <div class="day-lbl">T</div><div class="day-lbl">F</div><div class="day-lbl">S</div><div class="day-lbl">S</div>
+    </div>
+  </div>
+
+  <div id="habits-list"></div>
+
+  <div class="week-bar-wrap"><div class="week-bar-fill" id="tracker-bar" style="width:0%"></div></div>
+  <div class="week-bar-label" id="tracker-bar-label" style="margin-top:6px;margin-bottom:24px">0% of marked habits completed</div>
+
+  <button class="btn-sec" onclick="resetWeek()">Reset this week</button>
+</div>
+
+<!-- REVIEW PAGE -->
+<div class="page" id="page-review">
+  <div style="padding:32px 0 20px">
+    <div class="hero-tag">Every Sunday evening</div>
+    <h2 style="font-family:'Syne',sans-serif;font-weight:800;font-size:26px;letter-spacing:-0.5px;margin-bottom:6px">Weekly review</h2>
+    <p style="font-size:13px;color:var(--muted)">10 minutes of honest reflection = a better week ahead. Don't skip this.</p>
+  </div>
+
+  <div class="review-card">
+    <div class="review-q"><span class="rq-icon">🌤</span> How was this week overall?</div>
+    <div class="mood-row" id="mood-row">
+      <button class="mood-btn" onclick="pickMood(this)">Really tough</button>
+      <button class="mood-btn" onclick="pickMood(this)">Just okay</button>
+      <button class="mood-btn" onclick="pickMood(this)">Decent</button>
+      <button class="mood-btn" onclick="pickMood(this)">Good</button>
+      <button class="mood-btn" onclick="pickMood(this)">Great week</button>
+    </div>
+  </div>
+
+  <div class="review-card">
+    <div class="review-q"><span class="rq-icon">🏆</span> One win from this week — no matter how small</div>
+    <textarea class="rv" id="r-win" placeholder="e.g. I didn't touch my phone first thing today..."></textarea>
+  </div>
+  <div class="review-card">
+    <div class="review-q"><span class="rq-icon">🔥</span> Which habit did I fail at most — and why?</div>
+    <textarea class="rv" id="r-fail" placeholder="Be honest. No judgment. Just observe the pattern..."></textarea>
+  </div>
+  <div class="review-card">
+    <div class="review-q"><span class="rq-icon">😬</span> What did I avoid this week that I should have faced?</div>
+    <textarea class="rv" id="r-avoid" placeholder="The thing you kept pushing to tomorrow..."></textarea>
+  </div>
+  <div class="review-card">
+    <div class="review-q"><span class="rq-icon">💛</span> How did I show up for people I care about?</div>
+    <textarea class="rv" id="r-people" placeholder="Was I present, consistent, kind? Or hot and cold again?"></textarea>
+  </div>
+  <div class="review-card">
+    <div class="review-q"><span class="rq-icon">🧠</span> Rate your discipline this week (1–10)</div>
+    <div class="rating-row" id="rating-row">
+      <button class="rat-btn" onclick="pickRating(this,1)">1</button>
+      <button class="rat-btn" onclick="pickRating(this,2)">2</button>
+      <button class="rat-btn" onclick="pickRating(this,3)">3</button>
+      <button class="rat-btn" onclick="pickRating(this,4)">4</button>
+      <button class="rat-btn" onclick="pickRating(this,5)">5</button>
+      <button class="rat-btn" onclick="pickRating(this,6)">6</button>
+      <button class="rat-btn" onclick="pickRating(this,7)">7</button>
+      <button class="rat-btn" onclick="pickRating(this,8)">8</button>
+      <button class="rat-btn" onclick="pickRating(this,9)">9</button>
+      <button class="rat-btn" onclick="pickRating(this,10)">10</button>
+    </div>
+  </div>
+  <div class="review-card">
+    <div class="review-q"><span class="rq-icon">🎯</span> ONE thing I will do differently next week</div>
+    <textarea class="rv" id="r-next" placeholder="One change. Not ten. Just one."></textarea>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
+    <button class="btn-primary" onclick="saveReview()">Save review</button>
+    <button class="btn-sec" onclick="clearReview()">Clear</button>
+  </div>
+  <div id="rv-saved" style="display:none;margin-top:12px;font-size:13px;color:var(--green);background:var(--green-dim);border-radius:var(--r-sm);padding:10px 14px;border:0.5px solid rgba(45,232,160,0.2)">
+    ✓ Review saved. Keep building.
+  </div>
+</div>
+
+<!-- ANALYZE PAGE -->
+<div class="page" id="page-analyze">
+  <div class="analyze-hero">
+    <div class="hero-tag">Your growth profile</div>
+    <h2>Personality analysis</h2>
+    <p>Based on your self-assessment — your strengths, blind spots, and the 3-phase roadmap to become who you want to be.</p>
+  </div>
+
+  <div class="insight-box">
+    <p>You have the mind of someone destined for big things — creative, empathetic, a fast learner with sharp attention to detail. But right now, low energy and avoidance are quietly stealing your future. The gap between who you want to be and who you're being isn't about talent. It's about systems. You don't need more motivation — you need structure so your best self shows up even on bad days.</p>
+  </div>
+
+  <div class="sec-head"><div class="sec-title">Your trait profile</div><div class="sec-badge">Based on habit data</div></div>
+  <div class="trait-grid" id="trait-grid">
+    <div class="trait-card">
+      <div class="trait-label">Creativity</div>
+      <div class="trait-val" style="color:var(--purple)">Very high</div>
+      <div class="trait-bar-bg"><div class="trait-bar-fill" style="width:88%;background:var(--purple)"></div></div>
+    </div>
+    <div class="trait-card">
+      <div class="trait-label">Ambition</div>
+      <div class="trait-val" style="color:var(--green)">Very high</div>
+      <div class="trait-bar-bg"><div class="trait-bar-fill" style="width:92%;background:var(--green)"></div></div>
+    </div>
+    <div class="trait-card" id="trait-discipline">
+      <div class="trait-label">Discipline <span style="font-size:10px;color:var(--hint)">(live)</span></div>
+      <div class="trait-val" id="td-val" style="color:var(--amber)">—</div>
+      <div class="trait-bar-bg"><div class="trait-bar-fill" id="td-bar" style="width:0%;background:var(--amber)"></div></div>
+    </div>
+    <div class="trait-card">
+      <div class="trait-label">Emotional control</div>
+      <div class="trait-val" style="color:var(--coral)">Needs work</div>
+      <div class="trait-bar-bg"><div class="trait-bar-fill" style="width:22%;background:var(--coral)"></div></div>
+    </div>
+    <div class="trait-card">
+      <div class="trait-label">Empathy</div>
+      <div class="trait-val" style="color:var(--green)">High</div>
+      <div class="trait-bar-bg"><div class="trait-bar-fill" style="width:80%;background:var(--green)"></div></div>
+    </div>
+    <div class="trait-card" id="trait-consistency">
+      <div class="trait-label">Consistency <span style="font-size:10px;color:var(--hint)">(live)</span></div>
+      <div class="trait-val" id="tc-val" style="color:var(--amber)">—</div>
+      <div class="trait-bar-bg"><div class="trait-bar-fill" id="tc-bar" style="width:0%;background:var(--amber)"></div></div>
+    </div>
+  </div>
+
+  <div class="sec-head"><div class="sec-title">Strengths</div><div class="sec-badge">Use as your engine</div></div>
+  <div class="strength-grid">
+    <div class="str-card positive">
+      <div class="str-icon">💡</div>
+      <div class="str-title">Idea generator</div>
+      <div class="str-body">You think in possibilities. Treat your life like a project and channel this into planning your comeback.</div>
+    </div>
+    <div class="str-card positive">
+      <div class="str-icon">👂</div>
+      <div class="str-title">Deep listener</div>
+      <div class="str-body">People trust you. Use this to repair bonds — one honest conversation at a time.</div>
+    </div>
+    <div class="str-card positive">
+      <div class="str-icon">⚡</div>
+      <div class="str-title">Fast learner</div>
+      <div class="str-body">You can clear all 8 backlogs. Speed isn't your problem — starting is.</div>
+    </div>
+    <div class="str-card positive">
+      <div class="str-icon">🔍</div>
+      <div class="str-title">Detail-oriented</div>
+      <div class="str-body">Once focused, you likely do quality work. The goal is to get into focus more often.</div>
+    </div>
+  </div>
+
+  <div class="sec-head"><div class="sec-title">Blind spots</div><div class="sec-badge">Be honest</div></div>
+  <div class="strength-grid">
+    <div class="str-card negative">
+      <div class="str-icon">📱</div>
+      <div class="str-title">Phone in the morning</div>
+      <div class="str-body">Sets a reactive, scattered tone for the entire day. This one habit costs you more than you think.</div>
+    </div>
+    <div class="str-card negative">
+      <div class="str-icon">🚫</div>
+      <div class="str-title">Goals without action</div>
+      <div class="str-body">You dream big but delay the start. The dream becomes a source of guilt instead of fuel.</div>
+    </div>
+    <div class="str-card negative">
+      <div class="str-icon">🌡</div>
+      <div class="str-title">Hot and cold relationships</div>
+      <div class="str-body">Inconsistency breaks trust slowly. People stop counting on you — even if they love you.</div>
+    </div>
+    <div class="str-card negative">
+      <div class="str-icon">🔄</div>
+      <div class="str-title">"Never enough" loop</div>
+      <div class="str-body">You hold yourself to impossible standards, feel crushed, then avoid instead of try.</div>
+    </div>
+  </div>
+
+  <div class="sec-head"><div class="sec-title">Your 12-month roadmap</div></div>
+
+  <div class="phase-card">
+    <div class="phase-badge pb-green">Phase 1 · Months 1–3</div>
+    <div class="phase-title">Stabilize & restart</div>
+    <div class="phase-sub">Stop the bleeding. Build one anchor habit at a time.</div>
+    <div class="phase-item">No phone for the first 30 minutes after waking up</div>
+    <div class="phase-item">Write 3 tasks the night before — do the hardest one first</div>
+    <div class="phase-item">Study 1 backlog subject for 45 minutes every day — non-negotiable</div>
+    <div class="phase-item">Apologize to one person you've hurt — genuinely, no excuses</div>
+    <div class="phase-item">Sleep by midnight. Same wake time every single day.</div>
+  </div>
+
+  <div class="phase-card">
+    <div class="phase-badge pb-purple">Phase 2 · Months 4–8</div>
+    <div class="phase-title">Build momentum & identity</div>
+    <div class="phase-sub">Stack wins. Start becoming the person you described.</div>
+    <div class="phase-item">Clear all backlogs one by one — celebrate each one loudly</div>
+    <div class="phase-item">Learn one career skill deeply — 30 min of deliberate practice daily</div>
+    <div class="phase-item">Schedule time with 2–3 important people every week — and show up</div>
+    <div class="phase-item">Start a wins journal — 3 things you did right, every evening</div>
+    <div class="phase-item">Track every rupee you spend for 30 days — no judgment, just awareness</div>
+  </div>
+
+  <div class="phase-card">
+    <div class="phase-badge pb-amber">Phase 3 · Months 9–12</div>
+    <div class="phase-title">Expand & lead</div>
+    <div class="phase-sub">From recovery to becoming someone others look up to.</div>
+    <div class="phase-item">Aim for top grades in at least 2 subjects this semester</div>
+    <div class="phase-item">Build something real — a project, freelance work, or a portfolio</div>
+    <div class="phase-item">Have the maturity conversation with family — show, don't just tell</div>
+    <div class="phase-item">Review this plan every month — adjust, don't abandon</div>
+  </div>
+
+  <div class="divider"></div>
+  <div style="text-align:center;padding:10px 0 20px">
+    <p style="font-size:13px;color:var(--muted);line-height:1.7">The proudest moment won't be a speech.<br>It'll be when they quietly notice you've changed.</p>
+  </div>
+</div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const HABITS = [
+  {id:'phone', name:'No phone first 30 min', note:'Put phone across the room tonight', color:'#2de8a0', bg:'rgba(45,232,160,0.12)', icon:'📵'},
+  {id:'tasks', name:'Write 3 tasks the night before', note:'Do the hardest one first', color:'#9d7cff', bg:'rgba(157,124,255,0.12)', icon:'📝'},
+  {id:'study', name:'Study 1 backlog — 45 min', note:'Non-negotiable. Every single day.', color:'#5ca8ff', bg:'rgba(92,168,255,0.12)', icon:'📚'},
+  {id:'sleep', name:'Sleep by midnight', note:'Same wake time every day', color:'#2de8a0', bg:'rgba(45,232,160,0.12)', icon:'🌙'},
+  {id:'wins', name:'Write 3 wins in journal', note:'What went right today?', color:'#ffbe3c', bg:'rgba(255,190,60,0.1)', icon:'✨'},
+  {id:'anger', name:'Pause before reacting', note:'10 seconds before any response', color:'#ff7c5c', bg:'rgba(255,124,92,0.12)', icon:'🧘'},
+  {id:'people', name:'Check in with someone I care about', note:'A text, call, or real conversation', color:'#9d7cff', bg:'rgba(157,124,255,0.12)', icon:'💛'},
+  {id:'money', name:'Log today\'s expenses', note:'No judgment — just awareness', color:'#ffbe3c', bg:'rgba(255,190,60,0.1)', icon:'💰'},
+  {id:'skill', name:'30 min on a career skill', note:'Design, code, content — pick one', color:'#5ca8ff', bg:'rgba(92,168,255,0.12)', icon:'🚀'},
+  {id:'move', name:'Move my body — any way', note:'Walk, stretch, anything counts', color:'#2de8a0', bg:'rgba(45,232,160,0.12)', icon:'🏃'},
+];
+
+let state = {};
+let reviewCount = 0;
+let currentRating = 0;
+
+function load() {
+  try {
+    const s = localStorage.getItem('sg_state');
+    if (s) state = JSON.parse(s);
+    reviewCount = parseInt(localStorage.getItem('sg_reviews') || '0');
+    // Restore review fields
+    ['r-win','r-fail','r-avoid','r-people','r-next'].forEach(id => {
+      const el = document.getElementById(id);
+      const val = localStorage.getItem('sg_rv_' + id);
+      if (el && val) el.value = val;
+    });
+    const savedMood = localStorage.getItem('sg_rv_mood');
+    if (savedMood) {
+      document.querySelectorAll('#mood-row .mood-btn').forEach(b => {
+        if (b.textContent === savedMood) b.classList.add('sel');
+      });
+    }
+    const savedRating = parseInt(localStorage.getItem('sg_rv_rating') || '0');
+    if (savedRating) {
+      currentRating = savedRating;
+      document.querySelectorAll('#rating-row .rat-btn').forEach(b => {
+        if (parseInt(b.textContent) === savedRating) b.classList.add('sel');
+      });
+    }
+  } catch(e) {}
+}
+function save() {
+  try {
+    localStorage.setItem('sg_state', JSON.stringify(state));
+    localStorage.setItem('sg_reviews', reviewCount);
+  } catch(e) {}
+}
+function saveReviewFields() {
+  try {
+    ['r-win','r-fail','r-avoid','r-people','r-next'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) localStorage.setItem('sg_rv_' + id, el.value);
+    });
+    const mood = document.querySelector('#mood-row .mood-btn.sel');
+    if (mood) localStorage.setItem('sg_rv_mood', mood.textContent);
+    if (currentRating) localStorage.setItem('sg_rv_rating', currentRating);
+  } catch(e) {}
+}
+function key(hid, day) { return hid + '_' + day; }
+
+function buildTracker() {
+  const list = document.getElementById('habits-list');
+  if (!list) return;
+  list.innerHTML = '';
+  HABITS.forEach(h => {
+    const row = document.createElement('div');
+    row.className = 'habit-card';
+    const top = document.createElement('div');
+    top.className = 'habit-top';
+    top.innerHTML = `
+      <div class="habit-icon-wrap" style="background:${h.bg}">
+        <span style="font-size:16px">${h.icon}</span>
+      </div>
+      <div class="habit-text">
+        <div class="habit-name">${h.name}</div>
+        <div class="habit-note">${h.note}</div>
+      </div>
+    `;
+    const dots = document.createElement('div');
+    dots.className = 'day-dots';
+    const today = new Date().getDay();
+    const todayIdx = today === 0 ? 6 : today - 1;
+    for (let d = 0; d < 7; d++) {
+      const btn = document.createElement('button');
+      btn.className = 'dot';
+      if (d === todayIdx) btn.classList.add('today');
+      const val = state[key(h.id, d)] || 0;
+      applyDot(btn, val, h.color);
+      btn.addEventListener('click', (function(hid, day, el, hcolor) {
+        return function() {
+          const cur = state[key(hid, day)] || 0;
+          state[key(hid, day)] = cur === 0 ? 1 : cur === 1 ? 2 : 0;
+          applyDot(el, state[key(hid, day)], hcolor);
+          save();
+          updateAllStats();
+        };
+      })(h.id, d, btn, h.color));
+      dots.appendChild(btn);
+    }
+    top.appendChild(dots);
+    row.appendChild(top);
+    list.appendChild(row);
+  });
+}
+
+function applyDot(el, val, color) {
+  el.className = 'dot' + (val===1?' done':val===2?' missed':'');
+  el.textContent = val===1?'✓':val===2?'✗':'';
+  if (val===1) { el.style.background=color+'22'; el.style.borderColor=color; el.style.color=color; }
+  else if (val===2) { el.style.background='rgba(255,124,92,0.12)'; el.style.borderColor='#ff7c5c'; el.style.color='#ff7c5c'; }
+  else { el.style.background=''; el.style.borderColor=''; el.style.color=''; }
+}
+
+function calcStats() {
+  const today = new Date().getDay();
+  const todayIdx = today === 0 ? 6 : today - 1;
+  let todayDone = 0;
+  HABITS.forEach(h => { if ((state[key(h.id, todayIdx)] || 0) === 1) todayDone++; });
+
+  let totalMarked = 0, totalDone = 0;
+  let dayDone = [];
+  for (let d = 0; d < 7; d++) {
+    let dd = 0, dm = 0;
+    HABITS.forEach(h => {
+      const v = state[key(h.id, d)] || 0;
+      if (v > 0) { dm++; totalMarked++; if (v===1){ dd++; totalDone++; } }
+    });
+    dayDone.push({done:dd, marked:dm});
+  }
+  const pct = totalMarked > 0 ? Math.round((totalDone/totalMarked)*100) : 0;
+
+  let streak = 0, cur = 0;
+  for (let d = 0; d < 7; d++) {
+    if (dayDone[d].marked > 0 && dayDone[d].done >= Math.ceil(dayDone[d].marked * 0.6)) { cur++; streak = Math.max(streak,cur); } else { cur=0; }
+  }
+  return { todayDone, pct, streak, dayDone };
+}
+
+function updateAllStats() {
+  const s = calcStats();
+  const total = HABITS.length;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('h-today', s.todayDone + '/' + total);
+  set('h-streak', s.streak);
+  set('h-score', s.pct + '%');
+  set('h-reviews', reviewCount);
+  set('t-today', s.todayDone + '/' + total);
+  set('t-streak', s.streak);
+  set('t-week', s.pct + '%');
+  set('week-pct-label', s.pct + '%');
+
+  const hb = document.getElementById('home-bar');
+  if (hb) hb.style.width = s.pct + '%';
+  const hbl = document.getElementById('home-bar-label');
+  if (hbl) hbl.textContent = s.pct + '% of marked habits completed this week';
+
+  const tb = document.getElementById('tracker-bar');
+  if (tb) tb.style.width = s.pct + '%';
+  const tbl = document.getElementById('tracker-bar-label');
+  if (tbl) tbl.textContent = s.pct + '% of marked habits completed';
+
+  buildMiniChart(s.dayDone);
+}
+
+function buildMiniChart(dayDone) {
+  const chart = document.getElementById('home-chart');
+  if (!chart) return;
+  const days = ['M','T','W','T','F','S','S'];
+  const max = Math.max(...dayDone.map(d => d.marked), 1);
+  chart.innerHTML = dayDone.map((d,i) => {
+    const pct = d.marked > 0 ? Math.round((d.done/d.marked)*100) : 0;
+    const h = Math.max(4, Math.round((d.done/max)*56));
+    const col = pct>=80?'#2de8a0':pct>=50?'#ffbe3c':d.marked>0?'#ff7c5c':'#1a1a24';
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div style="width:100%;display:flex;align-items:flex-end;height:52px">
+        <div class="mini-bar" style="height:${h}px;background:${col};width:100%"></div>
+      </div>
+      <div style="font-size:9px;color:var(--hint)">${days[i]}</div>
+    </div>`;
+  }).join('');
+}
+
+function goPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  updateAllStats();
+}
+
+function pickMood(btn) {
+  document.querySelectorAll('#mood-row .mood-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  try { localStorage.setItem('sg_rv_mood', btn.textContent); } catch(e) {}
+}
+
+function pickRating(btn, val) {
+  document.querySelectorAll('#rating-row .rat-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  currentRating = val;
+  try { localStorage.setItem('sg_rv_rating', val); } catch(e) {}
+}
+
+function highlightTodayLabel() {
+  const today = new Date().getDay();
+  const todayIdx = today === 0 ? 6 : today - 1;
+  const labels = document.querySelectorAll('#day-labels-row .day-lbl');
+  labels.forEach((lbl, i) => {
+    if (i === todayIdx) lbl.classList.add('today');
+  });
+}
+
+function initAutoSave() {
+  ['r-win','r-fail','r-avoid','r-people','r-next'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', () => {
+      try { localStorage.setItem('sg_rv_' + id, el.value); } catch(e) {}
+    });
+  });
+}
+
+function saveReview() {
+  reviewCount++;
+  save();
+  saveReviewFields();
+  updateAllStats();
+  const el = document.getElementById('rv-saved');
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+  showToast('Review saved. Keep building.');
+}
+
+function clearReview() {
+  ['r-win','r-fail','r-avoid','r-people','r-next'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value = ''; localStorage.removeItem('sg_rv_' + id); }
+  });
+  document.querySelectorAll('#mood-row .mood-btn').forEach(b => b.classList.remove('sel'));
+  document.querySelectorAll('#rating-row .rat-btn').forEach(b => b.classList.remove('sel'));
+  localStorage.removeItem('sg_rv_mood');
+  localStorage.removeItem('sg_rv_rating');
+  currentRating = 0;
+}
+
+function resetWeek() {
+  if (!confirm('Reset all habit data for this week?')) return;
+  state = {};
+  save();
+  buildTracker();
+  updateAllStats();
+  showToast('Week reset. Fresh start.');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+load();
+buildTracker();
+updateAllStats();
+highlightTodayLabel();
+initAutoSave();
+
+// Update live trait bars (discipline + consistency) from real habit data
+(function updateLiveTraits() {
+  const s = calcStats();
+  const pct = s.pct;
+  const label = pct >= 80 ? 'Strong' : pct >= 55 ? 'Building' : pct >= 30 ? 'Developing' : 'Getting started';
+  const color = pct >= 80 ? 'var(--green)' : pct >= 55 ? 'var(--amber)' : 'var(--coral)';
+  const tdVal = document.getElementById('td-val');
+  const tdBar = document.getElementById('td-bar');
+  const tcVal = document.getElementById('tc-val');
+  const tcBar = document.getElementById('tc-bar');
+  if (tdVal) { tdVal.textContent = label; tdVal.style.color = color; }
+  if (tdBar) { tdBar.style.width = pct + '%'; tdBar.style.background = color; }
+  if (tcVal) { tcVal.textContent = pct + '%'; tcVal.style.color = color; }
+  if (tcBar) { tcBar.style.width = pct + '%'; tcBar.style.background = color; }
+})();
+</script>
+</body>
+</html>
